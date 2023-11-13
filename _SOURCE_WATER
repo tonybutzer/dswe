@@ -1,0 +1,2 @@
+echo set -g default-command "${SHELL}" >> ~/.tmux.conf
+source /home/ec2-user/mambaforge/bin/activate water
