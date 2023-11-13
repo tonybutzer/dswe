@@ -10,3 +10,11 @@ publish:
 
 
 git: publish
+
+
+big:
+	du -a . | sort -n -r | head -n 10
+	echo HI
+	find . -size +10M
+	echo HI
+	for file in `find . -size +10M`; do ls -lh $$file; done

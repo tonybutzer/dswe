@@ -1,0 +1,412 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5cfda156-fbfe-4e8f-a071-a27529b6589f",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%env AWS_REQUEST_PAYER=requester"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cc7f6fda-ca36-4f85-b6d0-285b77780e08",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from stacLib.ard_stac_search import Astac\n",
+    "import rasterio as rio\n",
+    "from rasterio.windows import Window\n",
+    "\n",
+    "import numpy as np\n",
+    "import tqdm.notebook as tq\n",
+    "#import zarr"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "664e617d-016b-46e2-8e1a-e91e7d23f9de",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#my_date='2020-01-01/2021-12-31'\n",
+    "my_date='2020-01-01/2020-02-28'"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8d1116c1-7b02-4950-8e13-aea9c33b6901",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "stac_config = {}\n",
+    "\n",
+    "stac_config['url'] = 'https://landsatlook.usgs.gov/stac-server'\n",
+    "stac_config['fav_collection'] = 'landsat-c2l3-dswe'\n",
+    "stac_config['description'] = 'Landsat Collection 2 ARD Tiles DSWE'\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "db70bb1c-d92c-4a54-91d2-d6fba2779985",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "H='21'\n",
+    "V='10'\n",
+    "YEAR=2021"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "afef8df6-0a58-4c47-acff-8e878cbe9ac2",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "_stac = Astac(stac_config)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9a67e506-b782-4e70-8c03-ce0653314efb",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "date_range_text = my_date\n",
+    "cloud_cover_pct_max = '100'\n",
+    "_assets = _stac.get_my_assets(None, H, V, date_range_text, cloud_cover_pct_max)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c769ad13-33ed-4731-9ec2-806ed0e81497",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "_assets[0]['properties']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9716f48e-7f14-402f-9941-224da11e4515",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "\n",
+    "def read_tif(path: str, band: int = 1, window: Window = None):\n",
+    "    return rio.open(path).read(band, window=window)\n",
+    "\n",
+    "def read_ls_data(item, band, window):\n",
+    "    return read_tif(item['assets'][band]['alternate']['s3']['href'], window=window)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "fbc80072-9b9b-434c-a057-8629e4c9a125",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "len(_assets)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "1dc3cda1-618d-468d-9506-f0ec6c372bd1",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Initialize 3d array time Y X"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f89822cc-cfb1-4a71-ad94-a47d2d7b2a28",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "window = Window(0, 0, 256, 256)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "482cc5ec-f09b-4709-9bdd-c1a5ac85f1ce",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dswe_array = np.zeros(shape=(len(_assets), 256, 256), dtype=np.uint16)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3825057e-a977-4471-8606-d859a0ab6aef",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dswe_array.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "7fa218fc-77f1-4d00-a257-557882b362fa",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%time\n",
+    "p_bar=tq.tqdm(range(len(_assets)), position=0, leave=True)\n",
+    "myband='intsm'\n",
+    "for t1 in range(len(_assets)):\n",
+    "    item = _assets[t1]\n",
+    "    dswe_array[t1] = read_ls_data(item, myband, window)\n",
+    "    p_bar.update(1)\n",
+    "    p_bar.refresh()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f6c5b1d4-6b90-4572-b697-489faa3d69aa",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "my_dates=[]\n",
+    "for t1 in range(len(_assets)):\n",
+    "    print(t1)\n",
+    "    my_date = _assets[t1]['properties']['datetime']\n",
+    "    my_dates.append(my_date)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a5b1165f-44f4-431c-a8fe-b7468f217036",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "_assets[0]['properties']['datetime']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "77c6c96a-bb5a-4639-9e8a-53cb938fc007",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "my_dates"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bbffa811-758a-4248-8f36-e217c5a8deba",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bbdf9517-4990-4f97-b1ec-4262163c7e9f",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import holoviews as hv\n",
+    "hv.extension('bokeh', 'matplotlib')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "567a0f3d-e67b-4de4-b415-9536da0c4191",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dswe_array.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a9a548bb-e5d0-410f-9d4b-4c40f517b701",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mask255 = (dswe_array == 255)\n",
+    "dswe_array[mask255] = 5"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "acdadd0b-c478-46df-8284-f5698b473dd3",
+   "metadata": {},
+   "source": [
+    "ds = hv.Dataset((np.arange(256), np.arange(256), np.arange(10), big3d_ary), ['Time', 'y', 'x'], 'INTSM')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "45f88af5-1a91-4dc5-b65e-7a30dcb251fc",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from holoviews import opts"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ca8a72be-69ee-45cb-aa0f-b2b4e24bc374",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "opts.defaults(\n",
+    "    opts.GridSpace(shared_xaxis=True, shared_yaxis=True),\n",
+    "    opts.Image(cmap='tab20', width=400, height=400),\n",
+    "    opts.Labels(text_color='white', text_font_size='8pt', text_align='left', text_baseline='bottom'),\n",
+    "    opts.Path(color='white'),\n",
+    "    opts.Spread(width=600),\n",
+    "    opts.Overlay(show_legend=False))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a0582c2f-c1b5-4a24-a51e-97b0c90e6aec",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "id": "256ee3d1-587b-4ea1-aeb9-675d6b4851ac",
+   "metadata": {},
+   "source": [
+    "# 99 FAIL - the next step takes forever "
+   ]
+  },
+  {
+   "cell_type": "raw",
+   "id": "2e527268-8bb3-4efb-8f48-0eaeaaf7ad20",
+   "metadata": {},
+   "source": [
+    "ds.to(hv.Image, ['y', 'x']).hist()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "826ffda8-923c-4e37-8e29-642b1fe027e7",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "import xarray as xr\n",
+    "\n",
+    "# Assuming dswe_array is your 3D NumPy array\n",
+    "# Replace the dimensions, time, y, x, and data variable (dswe) names accordingly\n",
+    "\n",
+    "# Example dimensions\n",
+    "time_dim = np.arange(dswe_array.shape[0])\n",
+    "y_dim = np.arange(dswe_array.shape[1])\n",
+    "x_dim = np.arange(dswe_array.shape[2])\n",
+    "\n",
+    "# Create xarray DataArray\n",
+    "dswe_xr = xr.DataArray(dswe_array, dims=('time', 'y', 'x'),\n",
+    "                       coords={'time': time_dim, 'y': y_dim, 'x': x_dim},\n",
+    "                       name='dswe')\n",
+    "\n",
+    "# You can also add attributes if needed\n",
+    "dswe_xr.attrs['units'] = 'some_unit'\n",
+    "\n",
+    "# Print the xarray DataArray\n",
+    "print(dswe_xr)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b52553f5-ffcb-4642-b15a-7edb48898a93",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import hvplot.xarray"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "29637c74-daab-4a68-a60e-d3c63b30a05b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dswe_xr.hvplot.image(rasterize=True,  x='x', y='y', width=500, height=400, cmap='tab20' ).hist()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "03a23fa4-39fc-48e8-b1e6-ad79cff8a254",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#ds = dswe_xr.to_dataset()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "23ea06b0-7999-4c56-be5e-cbe2240dd68c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#ds.hvplot.image(rasterize=True,  x='x', y='y', width=500, height=400, cmap='tab20' )"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "abac16d3-9fa6-4297-ab95-c96f4e6520cf",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
