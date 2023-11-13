@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH --account=butzer
+#SBATCH --time=00:20:00
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH -c 1
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=butzer@contractor.usgs.gov
+#SBATCH --job-name=H21V10_Y14X18.job
+#SBATCH --output=.out/H21V10_Y14X18.out
+#SBATCH --error=.out/H21V10_Y14X18.err
+source /home/ec2-user/mambaforge/bin/activate water
+## source /home/ec2-user/tony/source_conda.src
+## source /home/butzer/miniconda3/bin/activate nlcd2
+python3 0_squirrel.py H21V10_Y14X18

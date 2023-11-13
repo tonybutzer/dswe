@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-
 from stacLib.ard_stac_search import Astac
 import rasterio as rio
 from rasterio.windows import Window
@@ -41,12 +39,14 @@ def get_my_work_from(task_number):
 
 
 #task_number_str = 85
-task_number_str = sys.argv[1]
-task_number = int(task_number_str)
+# task_number_str = sys.argv[1]
+# task_number = int(task_number_str)
 
-work = get_my_work_from(task_number)
+# work = get_my_work_from(task_number)
 
 #work = 'H21V10_Y18X7'
+
+work = sys.argv[1]
 
 
 def get_work(work_str):
@@ -129,7 +129,7 @@ for t1 in range(len(_assets)):
     p_bar.refresh()
 
 
-Z_store = f's3://ws-out/dwse/_H{H}V{V}_Y{Y}X{X}_store.zarr'
+Z_store = f's3://ws-out/dswe/_H{H}V{V}_Y{Y}X{X}_store.zarr'
 
 
 # Save the 3D NumPy array as a Zarr array
