@@ -1,0 +1,7 @@
+H21V10_Y4X3
+21 10 4 3
+https://landsatlook.usgs.gov/stac-server
+None 2020-01-01/2024-12-31 100
+440 items found
+{'start_datetime': '2023-10-26T16:36:06.7757460Z', 'end_datetime': '2023-10-26T16:36:30.6582900Z', 'datetime': '2023-10-26T16:36:18.717018Z', 'platform': 'LANDSAT_9', 'instruments': ['OLI', 'TIRS'], 'landsat:grid_horizontal': '21', 'landsat:grid_vertical': '10', 'landsat:grid_region': 'CU', 'landsat:scene_count': 2, 'eo:cloud_cover': 93.1232, 'landsat:cloud_shadow_cover': 5.4688, 'landsat:snow_ice_cover': 0.0006, 'landsat:fill': 45.423, 'proj:epsg': None, 'proj:shape': [5000, 5000], 'proj:transform': [30, 0, 584415, 0, -30, 1814805], 'created': '2023-10-30T14:11:01.126Z', 'updated': '2023-10-30T14:11:01.126Z'}
+SAVING ...  s3://ws-out/dswe/_H21V10_Y4X3_store.zarr
