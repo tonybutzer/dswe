@@ -131,7 +131,29 @@ for t1 in range(len(_assets)):
     p_bar.refresh()
 
 
-Z_store = f's3://{BUCKET}/dswe/v0/_H{H}V{V}_Y{Y}X{X}_store.zarr'
+Z_store = f's3://{BUCKET}/dswe/v0/{myband}/_H{H}V{V}_Y{Y}X{X}_store.zarr'
+
+
+# Save the 3D NumPy array as a Zarr array
+print('SAVING ... ', Z_store)
+zarr.save(Z_store, big3d_ary)
+
+big3d_ary = np.zeros(shape=(len(_assets), chunkY, chunkX), dtype=np.uint16)
+
+
+print(big3d_ary.shape)
+
+
+p_bar=tq.tqdm(range(len(_assets)), position=0, leave=True)
+myband='diag'
+for t1 in range(len(_assets)):
+    item = _assets[t1]
+    big3d_ary[t1] = read_ls_data(item, myband, window)
+    p_bar.update(1)
+    p_bar.refresh()
+
+
+Z_store = f's3://{BUCKET}/dswe/v0/{myband}/_H{H}V{V}_Y{Y}X{X}_store.zarr'
 
 
 # Save the 3D NumPy array as a Zarr array
